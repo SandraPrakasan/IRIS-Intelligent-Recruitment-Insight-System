@@ -1,0 +1,6 @@
+Hard_Skills: ['Python', 'SQL', 'My SQL', 'Tableau', 'Power', 'Bi', 'Pandas', 'Numpy', 'Matplotlib', 'Excel', 'Machine Learning', 'AWS(EMR,EC2,S3)', 'Cloud', 'Hive(HQL)', 'Excel', 'Object Recognition', 'Deep Learning', 'Face, eye, smile recognition', 'Music Genre Classification']
+Soft_Skills: ['data driven analytical decisions', 'analytical']
+Experience: ['Machine Learning Engineer Intern, May 2019', 'Data Experts Hub Analyst']
+Education: ['B.Tech, ECE (2020)']
+Certifications: []
+Projects: ['smart parking system', 'Music Genre Classification', 'Deep Learning Masters', 'Face, eye, smile recognition', 'Object Recognition']

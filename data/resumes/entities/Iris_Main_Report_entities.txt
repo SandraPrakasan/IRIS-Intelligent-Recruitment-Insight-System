@@ -1,0 +1,6 @@
+Hard_Skills: ['Artificial Intelligence (AI)', 'Natural Language Processing (NLP)', 'Tokenization', 'named entity recognition (NER)', 'semantic similarity', 'clustering techniques', 'machine learning (ML) models', 'recommendation engine', 'AI-powered features', 'BERT (Bidirectional Encoder Representations Transformers)', 'S-BERT (Sentence-Bidirectional Encoder Representations from Transformers)', 'Graph Neural Networks (GNNs)', 'Large Language Models (LLMs)', 'LLM', 'NLTK', 'SpaCy', 'Py PDF', 'python-docx', 'Postgre SQL', 'Supabase', 'React Type Script', 'VSCode', 'NPM', 'Git Hub/Git Lab', 'Tailwind CSS', 'DBSCAN', 'Hierarchical clustering algorithms', 'Cosine Similarity Metrics', 'Vector Embedding Generation', 'Data Anonymization', 'Data Preprocessing', 'Text Extraction', 'Text Standardization', 'Noise And Stopwords Removal', 'Role-Based Access Control (RBAC)']
+Soft_Skills: []
+Experience: []
+Education: []
+Certifications: []
+Projects: ['Resume Screening Platform', 'IRIS (Intelligent Recruitment Insight System)', 'Resu Matcher: An Intelligent Resume Ranking System', 'Enhanced Resume Screening Smart Hiring Using Sentence-Bidirectional Encoder Representations from Transformers (S-BERT)', 'Graph Neural Networks Candidate-Job Matching: An Inductive Learning Approach', 'Improving Gender-Related Fairness Sentence Encoders: A Semantics-Based Approach']

@@ -134,12 +134,26 @@ export default function ApplicantProfile({ onNavigate }) {
                 updates.avatar_url = urlData.publicUrl;
             }
 
+            
+
             if (resumeFile) {
-                const filePath = `${user.id}/${Date.now()}_${resumeFile.name}`;
-                // Make sure your bucket is named 'resumes' (plural) or 'resume' (singular) to match your Supabase Storage
-                await supabase.storage.from('resumes').upload(filePath, resumeFile, { upsert: true });
-                updates.resume_url = filePath;
-            }
+    const filePath = `${user.id}/${Date.now()}_${resumeFile.name}`;
+    
+    // 1. Perform the upload
+    const { error: uploadError } = await supabase.storage
+        .from('resume') // Matches your singular bucket name
+        .upload(filePath, resumeFile, { upsert: true });
+
+    // 2. STOP if there was an error
+    if (uploadError) {
+        console.error('Error uploading resume:', uploadError);
+        alert('Failed to upload resume. Please try again.');
+        return; // Stop the function here so we don't save a broken link
+    }
+
+    // 3. Only if upload succeeded, update the database path
+    updates.resume_url = filePath;
+}
             
             const { error } = await supabase.from('profiles').upsert(updates);
             if (error) throw error;

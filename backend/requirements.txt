@@ -1,0 +1,24 @@
+# ================== Core utilities ==================
+python-dotenv>=1.0.0
+pandas>=2.0.0
+tqdm>=4.66.0
+
+# ================== PDF / DOC processing ==================
+pypdf>=3.0.0
+pdfplumber>=0.10.0
+python-docx>=0.8.11
+unicodedata2>=0.7.2
+
+# ================== NLP preprocessing ==================
+nltk>=3.8.1
+
+# ================== Hugging Face / ML ==================
+transformers>=4.44.0
+torch>=2.2.0
+sentence-transformers>=2.2.2
+datasets>=2.19.0
+accelerate>=0.30.0
+
+# ================== APIs ==================
+openai>=1.30.0
+supabase>=2.0.0

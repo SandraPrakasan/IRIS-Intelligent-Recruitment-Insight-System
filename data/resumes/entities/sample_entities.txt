@@ -1,0 +1,6 @@
+Hard_Skills: ['Python', 'C', 'Java Script', 'React', 'Flask', 'My SQL', 'Firebase', 'Git', 'VS Code', 'Machine Learning', 'Data Preprocessing', 'REST APIs', 'Open CV']
+Soft_Skills: ['Teamwork', 'Communication', 'Adaptability', 'Problem-solving']
+Experience: ['Data Science Intern Tech Lab Innovations (June 2024 August 2024) - Assisted preprocessing datasets building predictive models.']
+Education: ['B.Tech Computer Science Engineering']
+Certifications: ['AWS Certified Solutions Architect', 'Google Cloud Professional']
+Projects: ['AI Resume Analyzer Extracted resume information using NLP LLMs.', 'Smart Attendance System Automated attendance tracking using Open CV Flask.']

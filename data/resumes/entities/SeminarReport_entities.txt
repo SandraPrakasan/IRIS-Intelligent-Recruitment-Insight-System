@@ -1,0 +1,6 @@
+Hard_Skills: ['Graph Neural Networks (GNNs)', 'Large Language Models (LLMs)', 'PyTorch', 'PyTorch Geometric', 'AdamW optimizer', 'OpenAI text-embedding-3-large model', 'GPT-4', 'Bayesian optimization', 'Optuna framework', 'NVIDIA RTX A5000 GPUs', 'Graph Convolutional Network (GCN)', 'Graph Attention Network (GAT)', 'Graph Isomorphism Network (GIN)', 'Multiplicative Integration GNN (MIGNN)', 'Graph Conv', 'Leaky ReLU', 'Jumping Knowledge', 'Global pooling (sum, mean, max)']
+Soft_Skills: ['adaptability', 'emotional intelligence', 'collaboration']
+Experience: []
+Education: ['Bachelor Technology', 'Computer Science Engineering']
+Certifications: []
+Projects: ['Graph Neural Networks for Candidate-Job Matching', 'Monte Carlo-Based Smart Evacuation System for High-Density Spaces']

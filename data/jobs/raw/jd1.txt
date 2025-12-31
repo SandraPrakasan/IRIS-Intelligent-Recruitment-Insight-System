@@ -1,0 +1,57 @@
+Job Title: Software Engineer – Backend (Python)
+
+Company: Tech Innovators Inc.
+
+Location: Bangalore, India
+
+Job Type: Full-time
+
+Experience Required: 2–5 years
+
+Qualifications:
+
+Bachelor’s or Master’s degree in Computer Science, Information Technology, or related field.
+
+Strong understanding of data structures, algorithms, and system design.
+
+Responsibilities:
+
+Design, develop, and maintain backend services and APIs.
+
+Collaborate with frontend engineers and data scientists to implement features.
+
+Optimize applications for performance, scalability, and reliability.
+
+Participate in code reviews and maintain coding standards.
+
+Required Skills:
+
+Proficient in Python, Django/Flask, and REST APIs.
+
+Experience with relational (MySQL/PostgreSQL) and NoSQL databases.
+
+Familiarity with version control (Git) and CI/CD pipelines.
+
+Preferred Skills:
+
+Knowledge of cloud platforms (AWS, GCP, or Azure).
+
+Experience with Docker, Kubernetes, and microservices architecture.
+
+Exposure to machine learning pipelines or data processing workflows.
+
+Soft Skills:
+
+Strong problem-solving and analytical abilities.
+
+Excellent teamwork and communication skills.
+
+Ability to work in a fast-paced, collaborative environment.
+
+Benefits:
+
+Competitive salary and performance bonuses.
+
+Health insurance and flexible work hours.
+
+Opportunities for learning and career growth.

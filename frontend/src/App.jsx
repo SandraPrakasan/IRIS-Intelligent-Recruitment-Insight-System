@@ -14,14 +14,54 @@ import ApplicantATS from './pages/ApplicantATS';            // Make sure this fi
 import ApplicantInterviews from './pages/ApplicantInterviews'; // Make sure this file exists
 import ApplicantMessages from './pages/ApplicantMessages';    // Make sure this file exists
 
+import { supabase } from './supabaseClient'; // Import at top
+
 export default function App() {
+  // Initialize state from localStorage if available, else login
   const [currentPage, setCurrentPage] = useState('login');
+  const [loading, setLoading] = useState(true); // START LOADING
+
+  // --- PERSISTENCE LOGIC ---
+  React.useEffect(() => {
+    const checkSession = async () => {
+      // 1. Check if user is logged in
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        // 2. If logged in, recover last page or default to 'applicant-jobs'
+        const lastPage = localStorage.getItem('last_iris_page');
+        if (lastPage && lastPage !== 'login') {
+          setCurrentPage(lastPage);
+        } else {
+          setCurrentPage('applicant-jobs');
+        }
+      }
+      setLoading(false); // STOP LOADING
+    };
+    checkSession();
+  }, []);
 
   const handleNavigate = (page) => {
     setCurrentPage(page);
+    // Persist navigation
+    if (page !== 'login' && page !== 'applicant' && page !== 'admin') {
+      localStorage.setItem('last_iris_page', page);
+    }
   };
 
   const renderPage = () => {
+    if (loading) {
+      // Simple Full-Screen Loader
+      return (
+        <div style={{
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          height: '100vh', backgroundColor: '#0f172a', color: '#fff'
+        }}>
+          <h2>Restoring Session...</h2>
+        </div>
+      );
+    }
+
     switch (currentPage) {
       // --- AUTH ---
       case 'login': return <LoginPage onNavigate={handleNavigate} />;
@@ -34,7 +74,7 @@ export default function App() {
 
       case 'applicant-profile':
         return <ApplicantProfile onNavigate={handleNavigate} />;
-      
+
       case 'applicant-interviews':
         return <ApplicantInterviews onNavigate={handleNavigate} />;
 
@@ -59,7 +99,7 @@ export default function App() {
         *, *::before, *::after { box-sizing: border-box; }
         html, body, #root { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #0f172a; }
       `}</style>
-      
+
       {renderPage()}
     </div>
   );

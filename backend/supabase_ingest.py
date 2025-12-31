@@ -24,18 +24,37 @@ from src.extraction.person_details_extraction_gemini import process_single_resum
 # ENV SETUP
 # ---------------------------------------------------------------------
 
-load_dotenv()
+from pathlib import Path
+
+# Explicitly load .env from the backend directory
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=env_path)
+
+# ENV SETUP
+# ---------------------------------------------------------------------
+
+from pathlib import Path
+
+# Load env safely
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_KEY")
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise RuntimeError("SUPABASE_URL and SUPABASE_KEY must be set in .env")
+# WARNING: Only raise error if running as MAIN script.
+# If imported as a library, allow it to pass (API provides its own client).
+client = None
 
-if not SUPABASE_URL.endswith("/"):
-    SUPABASE_URL += "/"
-
-client = create_client(SUPABASE_URL, SUPABASE_KEY)
+if SUPABASE_URL and SUPABASE_KEY:
+    if not SUPABASE_URL.endswith("/"):
+        SUPABASE_URL += "/"
+    try:
+        client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception as e:
+        print(f"⚠️ Warning: Failed to create global Supabase client: {e}")
+else:
+    print("⚠️ Warning: Supabase Credentials not found in environment. Only library functions will fail if called without a client.")
 
 ALLOWED_EXTENSIONS = {".pdf", ".docx"}
 
@@ -127,15 +146,17 @@ def build_resume_payload(user_id: str, extracted: Dict[str, Any], resume_path: s
     # 2. Mapping Dictionary (Gemini JSON Key -> DB Column Name)
     FIELD_MAP = {
         # Identity
+        "full_name":        "full_name",
         "role":             "role",
         "headline":         "headline",
         "summary":          "summary",
         
         
         # Contact & Socials (Crucial Mismatches Fixed Here)
-       
-         # Gemini: 'linkedin_url' -> DB: 'linkedin'
-           # Gemini: 'github_url'   -> DB: 'github'
+        "phone":            "phone",
+        "email":            "email",
+        "linkedin":         "linkedin",
+        "github":           "github",
         "portfolio":        "portfolio",
         
         # Arrays & JSONB
@@ -144,7 +165,8 @@ def build_resume_payload(user_id: str, extracted: Dict[str, Any], resume_path: s
         "education":        "education",
         "current_position": "current_position",
         # Experience
-        "experience":       "work_experience", # Gemini: 'experience' -> DB: 'work_experience'
+        # Experience
+        "work_experience":  "work_experience",
         "experience_years": "experience_years",
         
         # Extra
@@ -155,8 +177,14 @@ def build_resume_payload(user_id: str, extracted: Dict[str, Any], resume_path: s
     # 3. Dynamic Mapping
     for json_key, db_col in FIELD_MAP.items():
         val = extracted.get(json_key)
+        
         # Only update if value is meaningful (not None or empty)
         if val not in (None, "", [], {}):
+            
+            # SPECIAL HANDLING: Convert Lists to Comma-Separated Strings for specific 'text' columns
+            if json_key in ["certifications", "languages", "technical_skills"] and isinstance(val, list):
+                val = ", ".join(val)
+                
             payload[db_col] = val
 
     return payload
@@ -176,10 +204,45 @@ def upsert_profile(client, payload: Dict[str, Any]):
         
     except Exception as e:
         print(f"❌ DB Upsert Error for {payload['id']}: {e}")
+        raise e
 
 # ---------------------------------------------------------------------
-# MAIN PIPELINE
+# UNIFIED PROCESSING FUNCTION (Called by API and Main)
 # ---------------------------------------------------------------------
+
+def process_resume(client, user_id: str, file_path: str, temp_dir: str = "data/resumes/raw") -> Dict[str, Any]:
+    """
+    Downloads, extracts, and upserts a resume. 
+    Used by both the API (real-time) and the main script (batch).
+    """
+    try:
+        # 1. Download
+        print(f"⬇️ Downloading {file_path}...")
+        local_path = download_object(client, "resume", file_path, temp_dir)
+
+        # 2. Extract
+        print("🧠 Sending to Gemini...")
+        extracted_data = process_single_resume(local_path)
+        
+        if not extracted_data:
+            raise ValueError("Gemini returned empty data")
+
+        # 3. Hash
+        file_hash = compute_file_hash(local_path)
+
+        # 4. Payload & Upsert
+        payload = build_resume_payload(user_id, extracted_data, file_path, file_hash)
+        upsert_profile(client, payload)
+
+        # 5. Cleanup
+        if os.path.exists(local_path):
+            os.remove(local_path)
+            
+        return extracted_data
+
+    except Exception as e:
+        print(f"❌ Error processing resume {file_path}: {e}")
+        raise e
 
 def main():
     parser = argparse.ArgumentParser()

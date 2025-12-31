@@ -34,6 +34,7 @@ OUTPUT RULES:
 - Return "work_experience" as a LIST of objects with fields: role, company, year,duration, description.
 - Return "education" as a LIST of objects with fields: course, institution, year.
 - For "skills", "technical_skills", "certifications", and "languages", return LISTS of strings.
+- **CRITICAL**: "languages" refers ONLY to human spoken/written languages (e.g., English, Hindi, Spanish). Programming languages (Python, Java, etc.) MUST go into "technical_skills".
 - For single-value fields like "role", "headline", "summary" and return STRING or null.
 -Calculate experience_years as an INTEGER representing total years of experience, or null if not derivable.
 -only use the field names and structure defined in the schema below.
@@ -44,7 +45,7 @@ JSON SCHEMA:
   "headline": string | null,
   "summary": string | null,
   "skills": string[],
-  "technical_skills": string[],
+  "technical_skills": string[],  <-- Put Programming Languages HERE
   "education": [
     {
       "course": string | null,
@@ -52,16 +53,16 @@ JSON SCHEMA:
       "year": string | null
     }
   ],
-  "experience": [  <--- THIS FORCES THE STRUCTURE YOU SAW
+  "work_experience": [
     {
       "role": string | null,
       "company": string | null,
-      "year": string | null,
+      "years": string | null,
       "description": string | null
     }
   ],
   "certifications": string[],
-  "languages": string[]
+  "languages": string[],
   "experience_years": integer | null
 }
 "current_position": string | null,
@@ -135,23 +136,68 @@ def process_raw_resumes():
         except Exception as e:
             print(f"❌ Failed for {file_path.name}: {e}")
 
+from src.extraction.fallback_extractor import extract_fallback
+from src.preprocess.regex_pii import extract_contact_info_regex, mask_contact_info_regex
+from src.preprocess.anonymizer import extract_name_and_mask
+
 def process_single_resume(file_path: str) -> dict:
     """
     Helper function for supabase_ingest.py to process a single downloaded file.
     """
+    text = ""
+    pii_data = {}
+    
     try:
         # 1. Convert file path to string just in case
         path_str = str(file_path)
         
         # 2. Parse the text from the file (PDF/DOCX)
-        text = parse_file(path_str)
+        raw_text = parse_file(path_str)
         
-        # 3. Send to Gemini for extraction
-        return extract_resume_entities_gemini(text)
+        # 3a. Privacy Step 1: Extract and Mask Contact Info (Regex)
+        print("🔒 [1/2] Masking Phone/Email/Links...")
+        pii_contact = extract_contact_info_regex(raw_text)
+        masked_text_v1 = mask_contact_info_regex(raw_text)
+        
+        # 3b. Privacy Step 2: Extract and Mask Candidate Name (NER)
+        print("🔒 [2/2] Masking Names (NER)...")
+        ner_result = extract_name_and_mask(masked_text_v1)
+        final_masked_text = ner_result["masked_text"]
+        candidate_name = ner_result["candidate_name"]
+        
+        # Merge PII Data
+        pii_data = pii_contact
+        pii_data["full_name"] = candidate_name 
+        
+        # Store masked text for error handling usage
+        text = final_masked_text 
+        print(f"DEBUG: Final Masked Text Length: {len(text)}")
+        if len(text) < 50:
+            print("⚠️ WARNING: Masked text is suspiciously short!")
+
+        # 4. Send FINAL MASKED text to Gemini
+        print("🧠 Sending to Gemini...")
+        extracted = extract_resume_entities_gemini(final_masked_text)
+        
+        # 5. Fallback if Gemini failed
+        if not extracted:
+            print("⚠️ Gemini returned empty. Using Regex Fallback.")
+            extracted = extract_fallback(final_masked_text)
+            
+        # 6. Merge PII back into results (whether from Gemini or Fallback)
+        extracted.update(pii_data)
+        
+        return extracted
         
     except Exception as e:
         print(f"❌ Error processing {file_path}: {e}")
-        return {} # Return empty dict on failure to prevent pipeline crash
+        # Final Fallback attempt
+        if text:
+            print("⚠️ Exception occurred. Using Regex Fallback on masked text.")
+            fallback_data = extract_fallback(text)
+            fallback_data.update(pii_data) 
+            return fallback_data
+        return pii_data
     
 
 if __name__ == "__main__":

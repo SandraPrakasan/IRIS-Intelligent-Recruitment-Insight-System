@@ -1,0 +1,6 @@
+Candidate Name: Jane Doe
+Email: jane@example.com
+Projects:
+1. E-Commerce App
+Tech Stack: React, Node.js
+Description: A shopping site.

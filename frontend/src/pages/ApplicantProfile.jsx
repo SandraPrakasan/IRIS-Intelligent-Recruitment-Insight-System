@@ -25,7 +25,7 @@ export default function ApplicantProfile({ onNavigate }) {
             try {
                 // Get current user
                 const { data: { user } } = await supabase.auth.getUser();
-                
+
                 if (user) {
                     // Fetch Profile using maybeSingle() to avoid errors if empty
                     const { data: profile, error } = await supabase
@@ -44,12 +44,42 @@ export default function ApplicantProfile({ onNavigate }) {
                         setFormData(combinedData);
                         setOriginalFormData(combinedData);
                         if (profile.avatar_url) {
-                           setAvatarUrl(profile.avatar_url);
+                            setAvatarUrl(profile.avatar_url);
                         }
                     } else {
                         // New user - Initialize with just email
                         setFormData({ email: user.email });
                     }
+
+                    // --- REALTIME SUBSCRIPTION ---
+                    const channel = supabase
+                        .channel('profile_updates')
+                        .on(
+                            'postgres_changes',
+                            {
+                                event: 'UPDATE',
+                                schema: 'public',
+                                table: 'profiles',
+                                filter: `id=eq.${user.id}`,
+                            },
+                            (payload) => {
+                                console.log("Realtime update received:", payload);
+                                const updatedProfile = payload.new;
+                                const combinedData = { ...updatedProfile, email: user.email };
+                                setFormData(combinedData);
+                                setOriginalFormData(combinedData);
+                                if (updatedProfile.avatar_url) {
+                                    setAvatarUrl(updatedProfile.avatar_url);
+                                }
+                                setIsExtracting(false); // Stop extracting spinner if active
+                            }
+                        )
+                        .subscribe();
+
+                    return () => {
+                        supabase.removeChannel(channel);
+                    };
+
                 }
             } catch (error) {
                 console.error("Unexpected error:", error);
@@ -65,13 +95,16 @@ export default function ApplicantProfile({ onNavigate }) {
     const handleEditClick = () => {
         setFormData(currentData => {
             const hasExperience = currentData.work_experience && currentData.work_experience.length > 0;
+            const hasEducation = currentData.education && currentData.education.length > 0;
+            let newData = { ...currentData };
+
             if (!hasExperience) {
-                return {
-                    ...currentData,
-                    work_experience: [{ id: Date.now(), company: '', role: '', years: '' }]
-                };
+                newData.work_experience = [{ id: Date.now(), company: '', role: '', years: '' }];
             }
-            return currentData;
+            if (!hasEducation) {
+                newData.education = [{ id: Date.now() + 1, course: '', institution: '', year: '' }];
+            }
+            return newData;
         });
         setShowFullProfile(true);
         setIsEditing(true);
@@ -90,7 +123,7 @@ export default function ApplicantProfile({ onNavigate }) {
         const newValue = type === 'checkbox' ? checked : value;
         setFormData(prev => ({ ...prev, [name]: newValue }));
     };
-    
+
     const handleAddExperience = () => {
         const newExperience = { id: Date.now(), company: '', role: '', years: '' };
         setFormData(prev => ({
@@ -98,7 +131,7 @@ export default function ApplicantProfile({ onNavigate }) {
             work_experience: [...(prev.work_experience || []), newExperience]
         }));
     };
-    
+
     const handleExperienceChange = (index, e) => {
         const { name, value } = e.target;
         const updatedExperience = [...(formData.work_experience || [])];
@@ -106,11 +139,26 @@ export default function ApplicantProfile({ onNavigate }) {
         setFormData(prev => ({ ...prev, work_experience: updatedExperience }));
     };
 
+    const handleAddEducation = () => {
+        const newEducation = { id: Date.now(), course: '', institution: '', year: '' };
+        setFormData(prev => ({
+            ...prev,
+            education: [...(prev.education || []), newEducation]
+        }));
+    };
+
+    const handleEducationChange = (index, e) => {
+        const { name, value } = e.target;
+        const updatedEducation = [...(formData.education || [])];
+        updatedEducation[index] = { ...updatedEducation[index], [name]: value };
+        setFormData(prev => ({ ...prev, education: updatedEducation }));
+    };
+
     const handleResumeFileChange = (e) => {
         if (!isEditing || !e.target.files || e.target.files.length === 0) return;
         setResumeFile(e.target.files[0]);
     };
-    
+
     const handleAvatarFileChange = (e) => {
         if (!isEditing || !e.target.files || e.target.files.length === 0) return;
         const file = e.target.files[0];
@@ -134,27 +182,34 @@ export default function ApplicantProfile({ onNavigate }) {
                 updates.avatar_url = urlData.publicUrl;
             }
 
-            
+
 
             if (resumeFile) {
-    const filePath = `${user.id}/${Date.now()}_${resumeFile.name}`;
-    
-    // 1. Perform the upload
-    const { error: uploadError } = await supabase.storage
-        .from('resume') // Matches your singular bucket name
-        .upload(filePath, resumeFile, { upsert: true });
+                // Use a fixed name "resume.<ext>" to ensure overwriting
+                const fileExt = resumeFile.name.split('.').pop();
+                const filePath = `${user.id}/resume.${fileExt}`;
 
-    // 2. STOP if there was an error
-    if (uploadError) {
-        console.error('Error uploading resume:', uploadError);
-        alert('Failed to upload resume. Please try again.');
-        return; // Stop the function here so we don't save a broken link
-    }
+                // 1. Perform the upload
+                const { error: uploadError } = await supabase.storage
+                    .from('resume') // Matches your singular bucket name
+                    .upload(filePath, resumeFile, { upsert: true });
 
-    // 3. Only if upload succeeded, update the database path
-    updates.resume_url = filePath;
-}
-            
+                // 2. STOP if there was an error
+                if (uploadError) {
+                    console.error('Error uploading resume:', uploadError);
+                    alert('Failed to upload resume. Please try again.');
+                    return; // Stop the function here so we don't save a broken link
+                }
+
+                // 3. Only if upload succeeded, update the database path
+                updates.resume_url = filePath;
+
+                // 4. Trigger Backend Extraction
+                // NOTE: We now rely on Supabase Database Webhooks to trigger processing
+                // when a new file is inserted into storage.objects.
+                // console.log("Upload successful. Waiting for webhook to trigger extraction...");
+            }
+
             const { error } = await supabase.from('profiles').upsert(updates);
             if (error) throw error;
 
@@ -195,6 +250,8 @@ export default function ApplicantProfile({ onNavigate }) {
                 handleSaveProfile={handleSaveProfile}
                 handleFileChange={handleResumeFileChange}
                 handlePhotoChange={handleAvatarFileChange}
+                handleAddEducation={handleAddEducation}
+                handleEducationChange={handleEducationChange}
             />
         </ApplicantLayout>
     );

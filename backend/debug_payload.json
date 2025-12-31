@@ -1,0 +1,69 @@
+{
+  "id": "81185bdc-85be-4ff2-99c7-16cf8356cb51",
+  "resume_url": "81185bdc-85be-4ff2-99c7-16cf8356cb51/resume.pdf",
+  "file_hash": "f6f9d1e0b3badc01329126aa9f249a3e26f1ba12e26d274de0323c359faa1c13",
+  "processed": true,
+  "updated_at": "now()",
+  "full_name": "med Raffi",
+  "summary": "Computer Science student proficient in Python, Java, and C with strong skills in Object-Oriented Programming. Experienced in software development and version control using Git. Adaptable team player focused on solving complex technical challenges.",
+  "phone": "+9195390771",
+  "email": "saheedmuhammedraffi@gmail.com",
+  "skills": [
+    "Communication",
+    "Teamwork",
+    "Adaptability",
+    "Analytical Thinking"
+  ],
+  "technical_skills": "Python, Java, C, SQL, HTML, CSS, JavaScript, Flask, React, Pandas, Scikit-learn, NumPy, Git, VSCode, GoogleColab, Docker, TensorFlow",
+  "education": [
+    {
+      "course": "B.Tech in Computer Science and Engineering",
+      "institution": "Carmel College of Engineering and Technology, Alappuzha",
+      "year": "2022 Present"
+    },
+    {
+      "course": "Higher Secondary Education",
+      "institution": "S.D.V. English Medium Higher Secondary School, Alappuzha",
+      "year": null
+    }
+  ],
+  "work_experience": [
+    {
+      "role": "AI/ML Intern",
+      "company": "ICT Academy of Kerala, Trivandrum",
+      "years": "Jun 2025 - Jul 2025",
+      "description": "Underwent a 1-month internship on Artificial Intelligence and Machine Learning. Collaborated with a 5-member team to deploy a prototype ML model tested on real-world datasets."
+    },
+    {
+      "role": "Webmaster",
+      "company": "IEEE Computer Society",
+      "years": "July 2025 Present",
+      "description": "Developed a responsive web portal and admin dashboard to streamline real-time event tracking and member registration."
+    },
+    {
+      "role": "TEDxCCET Curation Lead",
+      "company": "Dept. of Computer Science, CCET",
+      "years": "Nov 2025 Present",
+      "description": "Manage speaker logistics, schedules, and deliverables to ensure strict adherence to event timelines. Coordinate technical requirements and stage cues between speakers and the production team."
+    }
+  ],
+  "projects": [
+    {
+      "tech_stack": [
+        "React",
+        "Supabase"
+      ],
+      "description": "A full-stack milk management and distribution system that automates milk collection, farmer payments, billing, and delivery tracking through a centralized platform."
+    },
+    {
+      "tech_stack": [
+        "Python",
+        "TensorFlow",
+        "Flask",
+        "React"
+      ],
+      "description": "Developed an LSTM-based model to forecast short-term stock prices using live data. Integrated the trained model into a Flask API with a React interface for real-time trend prediction."
+    }
+  ],
+  "certifications": "AIML Internship ICT Academy of Kerala 2025, Python Foundation Certification Springboard 2025, Programming in Java NPTEL 2024"
+}

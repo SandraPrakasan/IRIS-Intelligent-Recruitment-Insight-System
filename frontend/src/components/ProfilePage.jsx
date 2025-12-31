@@ -25,6 +25,8 @@ const ProfilePage = ({
     handleSaveProfile,
     handleFileChange,
     handlePhotoChange,
+    handleAddEducation,
+    handleEducationChange,
 }) => {
     if (loading) {
         return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}><SpinnerIcon /> <span style={{ marginLeft: '1rem', fontSize: '1.25rem' }}>Loading Profile...</span></div>;
@@ -50,10 +52,12 @@ const ProfilePage = ({
                             handleAddExperience={handleAddExperience}
                             showFullProfile={showFullProfile}
                             isExtracting={isExtracting}
+                            handleAddEducation={handleAddEducation}
+                            handleEducationChange={handleEducationChange}
                         />
                     </div>
                 </div>
-                
+
                 {/* Right Column - Always visible */}
                 <CVForm
                     profileData={profileData}
@@ -64,7 +68,7 @@ const ProfilePage = ({
                     handleFileChange={handleFileChange}
                 />
             </div>
-            
+
             {isEditing && (
                 <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '2rem', gap: '1rem' }}>
                     {/* Save and Cancel Buttons */}
@@ -72,7 +76,7 @@ const ProfilePage = ({
                         Cancel
                     </motion.button>
                     <AnimatePresence>
-                        {saveSuccess && ( <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ color: '#34D399', marginRight: '1rem' }}> Profile Saved! </motion.p> )}
+                        {saveSuccess && (<motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ color: '#34D399', marginRight: '1rem' }}> Profile Saved! </motion.p>)}
                     </AnimatePresence>
                     <motion.button onClick={handleSaveProfile} disabled={isSaving} whileHover={{ scale: isSaving ? 1 : 1.03 }} style={{ backgroundColor: '#FBBF24', color: '#1a202c', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', fontWeight: 'bold', cursor: isSaving ? 'not-allowed' : 'pointer', border: 'none', display: 'flex', alignItems: 'center' }}>
                         {isSaving && <SpinnerIcon />} {isSaving ? 'Saving...' : 'Save Changes'}

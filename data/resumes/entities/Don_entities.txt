@@ -1,6 +1,0 @@
-Hard_Skills: ['Python', 'C', 'Java', 'Figma', 'VSCode', 'AI/Machine Learning', 'Frontend Development', 'Flask', 'React', 'Google Collab', 'Matplotlib', 'Supabase']
-Soft_Skills: ['Creativity', 'Communication', 'Enthusiasm', 'Empathy', 'Enthusiasm', 'Innovative']
-Experience: ['AI/ML Intern | ICT Academy of [LOC] , [LOC] Jan2025Feb2025', 'Underwent a 1-month internship on Artificial Intelligence and Machine Learning.', 'Collaborated with a 4 member team to deploy a prototype model tested on 5+ real world datasets.']
-Education: ['B.Tech in Computer Science and Engineering', '12th Grade (State Board)']
-Certifications: ['ICTAcademy: AIand Machine Learning 2025', 'Infosys Springboard: Fundamentals Using Python 2025', 'NPTEL: Programmingin Java Elite Rank 2023']
-Projects: ['Stock Price Prediction Web App | Python,Flask,React,Google Collab 2025 Builtafull-stackstockpricepredictionwebappusing React(frontend)and Flask (backend),withmodeltrainingin Google Colabandresultvisualizationvia Mat- plotlibservedthroughthebackend.', 'Donation Management System | React,Supabase 2024 Developeda Donation Management Systemforrecordingandtrackingcontributionsfromindividualsandorganizations, featuringreal-timemonitoring, transparentdashboards,progresstracking,andsecurerole-basedaccesscontrol.']

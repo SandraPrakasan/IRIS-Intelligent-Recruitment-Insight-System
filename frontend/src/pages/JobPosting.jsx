@@ -8,21 +8,20 @@ const EditIcon = () => <svg style={{width:'16px', height:'16px'}} viewBox="0 0 2
 const TrashIcon = () => <svg style={{width:'16px', height:'16px', color:'#EF4444'}} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>;
 const SpinnerIcon = () => <motion.svg animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} style={{ width: '16px', height: '16px', marginRight: '8px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></motion.svg>;
 
-export default function JobPosting() {
+export default function JobPosting({ onNavigate }) { 
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingJob, setEditingJob] = useState(null);
 
-    // --- UPDATED FORM STATE ---
     const [formData, setFormData] = useState({
         title: '',
         department: '',
         location: '',
         job_type: 'Full-time',
         experience_level: '',
-        salary_range: '', // 🆕 Added Salary Range
+        salary_range: '',
         skills_required: '',
         deadline: '',
         description: ''
@@ -38,13 +37,18 @@ export default function JobPosting() {
             const { data: { user } } = await supabase.auth.getUser();
             if(!user) return;
 
-            const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user.id).single();
+            // ✅ FIXED: Fetch company_id from 'user_roles' instead of 'profiles'
+            const { data: roleData } = await supabase
+                .from('user_roles')
+                .select('company_id')
+                .eq('user_id', user.id)
+                .single();
             
-            if (profile?.company_id) {
+            if (roleData?.company_id) {
                 const { data, error } = await supabase
                     .from('jobs')
                     .select('*')
-                    .eq('company_id', profile.company_id)
+                    .eq('company_id', roleData.company_id)
                     .order('created_at', { ascending: false });
                 
                 if (data) setJobs(data);
@@ -67,8 +71,14 @@ export default function JobPosting() {
 
             const skillsArray = formData.skills_required.split(',').map(s => s.trim()).filter(s => s);
 
-            const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user.id).single();
-            if (!profile?.company_id) throw new Error("You are not linked to a company.");
+            // ✅ FIXED: Fetch company_id from 'user_roles' instead of 'profiles'
+            const { data: roleData } = await supabase
+                .from('user_roles')
+                .select('company_id')
+                .eq('user_id', user.id)
+                .single();
+
+            if (!roleData?.company_id) throw new Error("You are not linked to a company.");
 
             const payload = {
                 title: formData.title,
@@ -76,11 +86,11 @@ export default function JobPosting() {
                 location: formData.location,
                 job_type: formData.job_type,
                 experience_level: formData.experience_level,
-                salary_range: formData.salary_range, // 🆕 Send Salary to DB
+                salary_range: formData.salary_range,
                 skills_required: skillsArray,
                 deadline: formData.deadline || null,
                 description: formData.description,
-                company_id: profile.company_id,
+                company_id: roleData.company_id, // ✅ Using correct ID
                 status: 'Active'
             };
 
@@ -126,7 +136,7 @@ export default function JobPosting() {
                 location: job.location || '',
                 job_type: job.job_type || 'Full-time',
                 experience_level: job.experience_level || '',
-                salary_range: job.salary_range || '', // 🆕 Load existing salary
+                salary_range: job.salary_range || '',
                 skills_required: job.skills_required ? job.skills_required.join(', ') : '',
                 deadline: job.deadline || '',
                 description: job.description || ''
@@ -135,7 +145,7 @@ export default function JobPosting() {
             setEditingJob(null);
             setFormData({
                 title: '', department: '', location: '', 
-                job_type: 'Full-time', experience_level: '', salary_range: '', // 🆕 Reset salary
+                job_type: 'Full-time', experience_level: '', salary_range: '', 
                 skills_required: '', deadline: '', description: ''
             });
         }
@@ -155,10 +165,24 @@ export default function JobPosting() {
             `}</style>
 
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold' }}>Job Postings</h1>
+                <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', margin: 0 }}>Job Postings</h1>
+                
                 <motion.button 
-                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => openModal()}
-                    style={{ backgroundColor: '#EF4444', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '0.5rem', border: 'none', display: 'flex', alignItems: 'center', cursor: 'pointer', fontWeight: 'bold' }}
+                    whileHover={{ scale: 1.05 }} 
+                    whileTap={{ scale: 0.95 }} 
+                    onClick={() => openModal()}
+                    style={{ 
+                        backgroundColor: '#EF4444', 
+                        color: 'white', 
+                        padding: '0.75rem 1.5rem', 
+                        borderRadius: '0.5rem', 
+                        border: 'none', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        cursor: 'pointer', 
+                        fontWeight: 'bold',
+                        marginRight: '11rem' 
+                    }}
                 >
                     <PlusIcon /> Post New Job
                 </motion.button>
@@ -180,7 +204,6 @@ export default function JobPosting() {
                                 </div>
                                 <div style={{ display: 'flex', gap: '1rem', color: '#d1d5db', fontSize: '0.9rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                                     <span>{job.department}</span><span>•</span><span>{job.job_type}</span><span>•</span><span>{job.location}</span>
-                                    
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem' }}>
@@ -212,12 +235,11 @@ export default function JobPosting() {
                                     <div><label style={labelStyle}>Location</label><input type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} style={inputStyle} placeholder="e.g. Remote" /></div>
                                 </div>
 
-                                {/* 🆕 SALARY & EXPERIENCE ROW */}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                     <div><label style={labelStyle}>Exp (Years)</label><input type="text" value={formData.experience_level} onChange={e => setFormData({...formData, experience_level: e.target.value})} style={inputStyle} placeholder="e.g. 3-5 years" /></div>
                                     <div>
                                         <label style={labelStyle}>Salary Range</label>
-                                        <input type="text" value={formData.salary_range} onChange={e => setFormData({...formData, salary_range: e.target.value})} style={inputStyle} placeholder="e.g. $80k - $120k or 10-15 LPA" />
+                                        <input type="text" value={formData.salary_range} onChange={e => setFormData({...formData, salary_range: e.target.value})} style={inputStyle} placeholder="e.g. $80k - $120k" />
                                     </div>
                                 </div>
 

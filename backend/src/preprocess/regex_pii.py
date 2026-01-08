@@ -2,7 +2,14 @@ import re
 
 # Regex Constants
 EMAIL_REGEX = r"[\w\.-]+@[\w\.-]+\.\w+"
-PHONE_REGEX = r"(\+?\d{1,3}[-]?)?(\d{3}[-]?)?\d{3}[-]?\d{4}"
+# Robust Regex for International & Indian formats
+# Matches:
+# +91 98765 43210
+# +91-98765-43210
+# 9876543210
+# 0987-654-3210
+# (0)9876543210
+PHONE_REGEX = r"(?:\+?(\d{1,3}))?[-. (]*(\d{2,5})[-. )]*(\d{2,5})[-. ]*(\d{2,5})(?:[-. ]*(\d{1,4}))?"
 URL_REGEX = r"https?://[^\s,)\"']+"
 
 def extract_contact_info_regex(text: str) -> dict:

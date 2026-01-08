@@ -31,7 +31,8 @@ OUTPUT RULES:
 -Include only the fields specified in the schema below.
 - Do NOT include any explanations, notes, or extra text outside the JSON.
 - Ensure the JSON is properly formatted and parsable.
-- Return "work_experience" as a LIST of objects with fields: role, company, year,duration, description.
+- Return "work_experience" as a LIST of objects with fields: role, company, year, duration, description.
+- Calculate "duration" (e.g. "2 years", "6 months") from dates if not explicitly stated.
 - Return "education" as a LIST of objects with fields: course, institution, year.
 - For "skills", "technical_skills", "certifications", and "languages", return LISTS of strings.
 - **CRITICAL**: "languages" refers ONLY to human spoken/written languages (e.g., English, Hindi, Spanish). Programming languages (Python, Java, etc.) MUST go into "technical_skills".
@@ -58,7 +59,22 @@ JSON SCHEMA:
       "role": string | null,
       "company": string | null,
       "years": string | null,
+      "duration": string | null,
       "description": string | null
+    }
+  ],
+  "projects": [
+    {
+      "title": "string | null",
+      "technologies_used": ["string"],
+      "description": string | null
+    }
+  ],
+  "projects": [
+    {
+      "title": "string | null",
+      "technologies_used": ["string"],
+      "description": "string | null"
     }
   ],
   "certifications": string[],

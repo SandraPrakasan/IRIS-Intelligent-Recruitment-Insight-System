@@ -5,7 +5,7 @@ import LoginPage from './pages/LoginPage';
 import AdminLogin from './pages/AdminLogin';
 import AppliLogin from './pages/AppliLogin';
 import ClientDash from './pages/clientdash';
-import Admindash from './pages/admindash';
+import Admindash from './pages/Admindashboard';
 
 // --- Applicant Pages ---
 import ApplicantJobPage from './pages/ApplicantJobPage';

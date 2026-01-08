@@ -172,6 +172,7 @@ def build_resume_payload(user_id: str, extracted: Dict[str, Any], resume_path: s
         # Extra
         "certifications":   "certifications",
         "languages":        "languages",
+        "projects":         "projects",
     }
 
     # 3. Dynamic Mapping

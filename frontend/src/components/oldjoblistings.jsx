@@ -3,19 +3,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../supabaseClient'; 
 import { SearchIcon } from './Icons'; 
 import JobDetail from './JobDetail'; 
-import ApplyModel from './ApplyModel'; // ✅ Make sure this matches your file name exactly
-import JobCard from './JobCard';       // ✅ Importing your updated JobCard
+import JobCard from './JobCard'; 
 
-export default function JobListings({ searchQuery, setSearchQuery, isSearching, filteredJobListings }) {
+// --- Icons ---
+const BuildingIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:'4px'}}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="2"></line><path d="M5 12h14"></path><path d="M5 7h14"></path><path d="M5 17h14"></path></svg>);
+const LocationIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:'4px'}}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>);
+const MoneyIcon = () => (<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:'4px'}}><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>);
+const CheckIcon = () => (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>);
+
+
+
+// --- Main Layout ---
+const JobListings = ({ searchQuery, setSearchQuery, isSearching, filteredJobListings }) => {
     
     const [selectedJob, setSelectedJob] = useState(null);
     const [appliedJobIds, setAppliedJobIds] = useState(new Set());
     const [applying, setApplying] = useState(null); 
-    
-    // State for the Apply Modal
-    const [jobToApply, setJobToApply] = useState(null);
 
-    // 1. Check Existing Applications on Load
+    // ✅ CHECK EXISTING APPLICATIONS (Using correct column: user_id)
     useEffect(() => {
         const fetchApplications = async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -23,7 +28,7 @@ export default function JobListings({ searchQuery, setSearchQuery, isSearching, 
                 const { data } = await supabase
                     .from('applications')
                     .select('job_id')
-                    .eq('user_id', user.id);
+                    .eq('user_id', user.id); // 🟢 FIXED: Changed 'applicant_id' to 'user_id'
                 
                 if (data) {
                     setAppliedJobIds(new Set(data.map(app => app.job_id)));
@@ -33,20 +38,9 @@ export default function JobListings({ searchQuery, setSearchQuery, isSearching, 
         fetchApplications();
     }, []);
 
-    // 2. Open Apply Modal
-    const initiateApply = (jobId) => {
-        const job = filteredJobListings.find(j => j.id === jobId);
-        if(job) {
-            setJobToApply(job);
-        }
-    };
-
-    // 3. Submit Application (Insert to DB)
-    const handleFinalSubmit = async (formData) => {
-        if (!jobToApply) return;
-        
-        setApplying(jobToApply.id);
-        
+    // ✅ HANDLE APPLY (Matches your SQL Schema)
+    const handleApply = async (jobId) => {
+        setApplying(jobId);
         try {
             const { data: { user } } = await supabase.auth.getUser();
             
@@ -58,64 +52,29 @@ export default function JobListings({ searchQuery, setSearchQuery, isSearching, 
             const { error } = await supabase
                 .from('applications')
                 .insert([{ 
-                    job_id: jobToApply.id, 
-                    user_id: user.id,
-                    status: 'Pending',
-                    resume_url: formData.resume_url,    
-                    cover_letter: formData.cover_letter 
+                    job_id: jobId, 
+                    user_id: user.id,   // 🟢 FIXED: Changed 'applicant_id' to 'user_id'
+                    status: 'Pending'   // 🟢 FIXED: Must be 'Pending' (not 'Applied') to match constraints
+                    // 🟢 NOTE: We removed 'applied_at' because your DB uses 'created_at' default now()
                 }]);
 
             if (error) throw error;
 
-            setAppliedJobIds(prev => new Set(prev).add(jobToApply.id));
-            alert("Application submitted successfully!"); 
-            
-            setJobToApply(null); 
+            // Update UI instantly
+            setAppliedJobIds(prev => new Set(prev).add(jobId));
 
         } catch (error) {
-            console.error("Error applying:", error.message);
+            console.error("Error applying:", error.message); // Helpful debug log
             alert(`Could not apply: ${error.message}`);
         } finally {
             setApplying(null);
         }
     };
 
-    // 4. ✅ NEW: Withdraw Application (Delete from DB)
-    const handleWithdraw = async (jobId) => {
-        // Confirm before deleting
-        if (!confirm("Are you sure you want to withdraw this application?")) {
-            return;
-        }
-
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // Delete query
-            const { error } = await supabase
-                .from('applications')
-                .delete()
-                .eq('job_id', jobId)
-                .eq('user_id', user.id);
-
-            if (error) throw error;
-
-            // Update UI immediately (remove ID from Set)
-            setAppliedJobIds(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(jobId);
-                return newSet;
-            });
-
-        } catch (error) {
-            console.error("Error withdrawing:", error.message);
-            alert("Failed to withdraw application.");
-        }
-    };
+    
 
     return (
         <>
-            {/* Search Bar */}
             <div style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', borderRadius: '1rem', padding: '1.5rem', marginBottom: '2rem' }}>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Open Positions</h2>
                 <p style={{ color: '#d1d5db', marginBottom: '1rem' }}>Browse through our current job openings</p>
@@ -125,19 +84,15 @@ export default function JobListings({ searchQuery, setSearchQuery, isSearching, 
                 </div>
             </div>
             
-            {/* Job Grid */}
             <motion.main layout style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
                 <AnimatePresence>
                     {filteredJobListings.length > 0 ? (
                         filteredJobListings.map((job) => (
                             <motion.div key={job.id} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ duration: 0.2 }}>
-                                {/* ✅ Using the imported JobCard */}
                                 <JobCard 
                                     {...job} 
                                     onViewDetails={() => setSelectedJob(job)} 
-                                    onApply={() => initiateApply(job.id)}
-                                    // ✅ Pass the withdraw function here
-                                    onWithdraw={() => handleWithdraw(job.id)}
+                                    onApply={handleApply}
                                     isApplied={appliedJobIds.has(job.id)}
                                     isApplying={applying === job.id}
                                 />
@@ -149,26 +104,18 @@ export default function JobListings({ searchQuery, setSearchQuery, isSearching, 
                 </AnimatePresence>
             </motion.main>
 
-            {/* Job Detail Modal */}
+            {/* Modal Logic */}
             {selectedJob && (
                 <JobDetail 
                     job={selectedJob} 
                     onClose={() => setSelectedJob(null)} 
-                    onApply={() => initiateApply(selectedJob.id)}
+                    onApply={handleApply}
                     isApplied={appliedJobIds.has(selectedJob.id)}
                     isApplying={applying === selectedJob.id}
-                />
-            )}
-
-            {/* Apply Form Modal */}
-            {jobToApply && (
-                <ApplyModel 
-                    job={jobToApply}
-                    isSubmitting={applying === jobToApply.id}
-                    onClose={() => setJobToApply(null)}
-                    onSubmit={handleFinalSubmit}
                 />
             )}
         </>
     );
 };
+
+export default JobListings;

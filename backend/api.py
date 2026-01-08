@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from supabase import create_client
 from fastapi.middleware.cors import CORSMiddleware
 from supabase_ingest import process_resume
+from src.extraction.job_extractor import process_single_job
 
 app = FastAPI()
 
@@ -98,6 +99,39 @@ async def storage_webhook(request: StorageEventRequest):
         return {"status": "success"}
     except Exception as e:
         print(f"❌ Processing failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/webhook/jobs")
+async def jobs_webhook(request: StorageEventRequest):
+    """
+    Handles Database Webhooks from Supabase (jobs table UPDATE/INSERT).
+    """
+    print(f"🔔 Webhook received: {request.type} on {request.table}")
+
+    if request.table != "jobs":
+        return {"status": "ignored", "reason": "wrong table"}
+    
+    # We care about INSERT and UPDATE
+    # For UPDATE, we might want to check if description changed, but for now we runs it anyway
+    
+    new_record = request.record
+    job_id = new_record.get("id")
+    description = new_record.get("description")
+    experience_level = new_record.get("experience_level")
+    
+    if not job_id:
+        print("❌ Webhook missing job_id")
+        return {"status": "error", "message": "missing id"}
+
+    print(f"▶️ Triggering job extraction for Job ID: {job_id}")
+
+    try:
+        # Re-use global client from line 32
+        process_single_job(client, job_id, description, experience_level)
+        return {"status": "success"}
+    except Exception as e:
+        print(f"❌ Job processing failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Run with: uvicorn api:app --reload

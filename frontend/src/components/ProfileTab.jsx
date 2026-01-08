@@ -294,6 +294,81 @@ const ProfileTab = ({
                     </div>
                 )}
             </div>
+
+            {/* Projects Section */}
+            <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1.5rem', marginTop: '1.5rem' }}>Projects</h3>
+                {isEditing ? (
+                    <>
+                        {(profileData?.projects || []).map((proj, index) => (
+                            <div key={index} style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '0.5rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                    <input type="text" name="title" value={proj.title || ''} onChange={(e) => {
+                                        const newProjects = [...(profileData.projects || [])];
+                                        newProjects[index] = { ...newProjects[index], title: e.target.value };
+                                        handleProfileChange({ target: { name: 'projects', value: newProjects } });
+                                    }} placeholder="Project Title" style={{ ...inputStyles, marginBottom: '0.5rem' }} />
+
+                                    <textarea name="description" value={proj.description || ''} onChange={(e) => {
+                                        const newProjects = [...(profileData.projects || [])];
+                                        newProjects[index] = { ...newProjects[index], description: e.target.value };
+                                        handleProfileChange({ target: { name: 'projects', value: newProjects } });
+                                    }} placeholder="Description" rows="2" style={{ ...inputStyles, marginBottom: '0.5rem' }} />
+
+                                    <TagInput
+                                        name={`projects[${index}].technologies_used`}
+                                        value={Array.isArray(proj.technologies_used) ? proj.technologies_used.join(', ') : (proj.technologies_used || '')}
+                                        onChange={(e) => {
+                                            const newProjects = [...(profileData.projects || [])];
+                                            const val = e.target.value;
+                                            newProjects[index] = { ...newProjects[index], technologies_used: val.split(',').map(s => s.trim()).filter(Boolean) };
+                                            handleProfileChange({ target: { name: 'projects', value: newProjects } });
+                                        }}
+                                        isEditing={true}
+                                        placeholder="Technologies (comma separated)..."
+                                    />
+                                </div>
+                                <button onClick={() => {
+                                    const newProjects = profileData.projects.filter((_, i) => i !== index);
+                                    handleProfileChange({ target: { name: 'projects', value: newProjects } });
+                                }} style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}>Remove Project</button>
+                            </div>
+                        ))}
+                        <button
+                            onClick={() => {
+                                const newProjects = [...(profileData.projects || []), { title: '', technologies_used: [], description: '' }];
+                                handleProfileChange({ target: { name: 'projects', value: newProjects } });
+                            }}
+                            style={{
+                                backgroundColor: 'rgba(251, 191, 36, 0.2)',
+                                color: '#FCD34D',
+                                padding: '0.5rem 1rem',
+                                borderRadius: '0.5rem',
+                                border: 'none',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            + Add Project
+                        </button>
+                    </>
+                ) : (
+                    <div>
+                        {profileData?.projects && profileData.projects.length > 0 ? (
+                            profileData.projects.map((proj, index) => (
+                                <div key={index} style={{ marginBottom: '1.5rem' }}>
+                                    <p style={{ fontWeight: 'bold', margin: 0, color: '#FCD34D' }}>{proj.title}</p>
+                                    <p style={{ fontSize: '0.875rem', color: '#9CA3AF', margin: '0.25rem 0' }}>
+                                        {Array.isArray(proj.technologies_used) ? proj.technologies_used.join(', ') : proj.technologies_used}
+                                    </p>
+                                    <p style={{ color: '#d1d5db', margin: 0 }}>{proj.description}</p>
+                                </div>
+                            ))
+                        ) : (
+                            <p>No projects added.</p>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

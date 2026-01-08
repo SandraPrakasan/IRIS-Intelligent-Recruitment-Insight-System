@@ -9,6 +9,7 @@ create table if not exists profile_embeddings (
   summary vector(1024),
   skills vector(1024),
   technical_skills vector(1024),
+  experience vector(1024),
   certifications vector(1024),
   languages vector(1024),
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
